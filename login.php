@@ -19,7 +19,7 @@ if (empty($email) || empty($senha)) {
 }
 
 // Usa Prepared Statement para buscar o usuário de forma segura
-$stmt = $conn->prepare("SELECT id_usuario, hash_senha FROM usuarios WHERE email = ?");
+$stmt = $conn->prepare("SELECT id_usuario, nome_completo, email, hash_senha FROM usuarios WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -30,9 +30,16 @@ if ($result && $result->num_rows > 0) {
 
     // Verifica se a senha fornecida corresponde ao hash armazenado
     if (password_verify($senha, $hash_armazenado)) {
-        // Sucesso! A senha está correta.
-        echo json_encode(["status" => "ok", "mensagem" => "Login realizado com sucesso"]);
-    } else {
+    // Sucesso! A senha está correta.
+    // ALTERADO: Em vez de só "ok", retorna os dados do usuário.
+    $dados_usuario = [
+        "id_usuario" => $usuario['id_usuario'],
+        "nome_completo" => $usuario['nome_completo'],
+        "email" => $usuario['email']
+        // Não inclua o hash da senha na resposta!
+    ];
+    echo json_encode(["status" => "ok", "mensagem" => "Login realizado com sucesso", "usuario" => $dados_usuario]);
+} else {
         // Senha incorreta
         echo json_encode(["status" => "erro", "mensagem" => "E-mail ou senha incorretos."]);
     }
