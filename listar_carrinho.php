@@ -10,7 +10,7 @@ if ($usuario_id <= 0) {
     exit;
 }
 
-// Vamos usar um JOIN para buscar os detalhes dos cursos que estão no carrinho
+// JOIN para buscar os detalhes dos cursos que estão no carrinho
 $stmt = $conn->prepare("
     SELECT c.*, u.nome_completo as nome_instrutor
     FROM carrinhoitens ci

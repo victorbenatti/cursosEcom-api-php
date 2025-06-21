@@ -2,16 +2,16 @@
 header('Content-Type: application/json; charset=utf-8');
 include("conexao.php");
 
-// Recebe o ID do usuário como parâmetro da URL
 $usuario_id = $_GET['usuario_id'] ?? 0;
 
 if ($usuario_id <= 0) {
-    http_response_code(400); // Bad Request
-    echo json_encode([]); // Retorna um array vazio em caso de erro
+    http_response_code(400);
+    echo json_encode([]);
     exit;
 }
 
-// Prepara a query para buscar os dados da nossa view, filtrando pelo aluno
+// Usar a VIEW vw_meuscursosativos é a forma mais limpa e eficiente!
+// Ela já contém o percentual de progresso calculado.
 $stmt = $conn->prepare("SELECT * FROM vw_meuscursosativos WHERE aluno_id = ?");
 $stmt->bind_param("i", $usuario_id);
 $stmt->execute();
@@ -19,12 +19,15 @@ $result = $stmt->get_result();
 
 $cursos = [];
 while ($row = $result->fetch_assoc()) {
-    // Faz o cast dos tipos de dados para garantir consistência no JSON
+    // Converte os tipos para o que o app espera e renomeia se necessário
     $row['id_curso'] = (int)$row['id_curso'];
-    // A view VW_MeusCursosAtivos não tem preco_curso, então podemos adicionar um valor padrão ou buscar da tabela Cursos se necessário.
-    // Para simplificar, vamos adicionar um valor padrão. Em um caso real, o ideal seria adicionar o preço na view.
-    $row['preco_curso'] = (float)($row['preco_curso'] ?? 0.0); 
-    $row['percentual_concluido'] = (int)$row['percentual_concluido'];
+    $row['percentualConcluido'] = (int)$row['percentual_concluido'];
+    // Ajusta os nomes das colunas para bater com a data class `Curso`
+    $row['urlImagem'] = $row['url_imagem_capa_curso'];
+
+    // Opcional: Adiciona um campo de preço fixo ou busca na tabela de cursos se precisar
+    $row['preco'] = 0.0; 
+
     $cursos[] = $row;
 }
 
